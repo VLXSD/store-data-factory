@@ -5,10 +5,10 @@
 		"factoryName": {
 			"value": "store-data-factory"
 		},
-		"store_sql_database_connectionString": {
+		"csvs_connectionString": {
 			"value": ""
 		},
-		"csvs_connectionString": {
+		"store_sql_database_connectionString": {
 			"value": ""
 		}
 	}

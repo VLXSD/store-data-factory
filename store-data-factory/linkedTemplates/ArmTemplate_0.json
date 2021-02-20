@@ -7,32 +7,19 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "store-data-factory"
 		},
-		"store_sql_database_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'store_sql_database'"
-		},
 		"csvs_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'csvs'"
+		},
+		"store_sql_database_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'store_sql_database'"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
-		{
-			"name": "[concat(parameters('factoryName'), '/store_sql_database')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"connectionString": "[parameters('store_sql_database_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
 		{
 			"name": "[concat(parameters('factoryName'), '/csvs')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -47,41 +34,17 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/product_balances')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/store_sql_database')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "store_sql_database",
-					"type": "LinkedServiceReference"
-				},
 				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "shop_id",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "product_id",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "balance",
-						"type": "int",
-						"precision": 10
-					}
-				],
+				"type": "AzureSqlDatabase",
 				"typeProperties": {
-					"schema": "dbo",
-					"table": "product_balances"
+					"connectionString": "[parameters('store_sql_database_connectionString')]"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/store_sql_database')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/contribute_margins')]",
@@ -122,7 +85,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/shops')]",
+			"name": "[concat(parameters('factoryName'), '/product_balances')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -134,18 +97,24 @@
 				"type": "AzureSqlTable",
 				"schema": [
 					{
-						"name": "id",
+						"name": "shop_id",
 						"type": "int",
 						"precision": 10
 					},
 					{
-						"name": "name",
-						"type": "varchar"
+						"name": "product_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "balance",
+						"type": "int",
+						"precision": 10
 					}
 				],
 				"typeProperties": {
 					"schema": "dbo",
-					"table": "shops"
+					"table": "product_balances"
 				}
 			},
 			"dependsOn": [
@@ -189,30 +158,34 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/named_product_balances')]",
+			"name": "[concat(parameters('factoryName'), '/shops')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "csvs",
+					"referenceName": "store_sql_database",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"container": "store"
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "int",
+						"precision": 10
 					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
+					{
+						"name": "name",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "shops"
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/csvs')]"
+				"[concat(variables('factoryId'), '/linkedServices/store_sql_database')]"
 			]
 		},
 		{
@@ -247,9 +220,9 @@
 					],
 					"sinks": [
 						{
-							"dataset": {
-								"referenceName": "named_product_balances",
-								"type": "DatasetReference"
+							"linkedService": {
+								"referenceName": "csvs",
+								"type": "LinkedServiceReference"
 							},
 							"name": "sink1"
 						}
@@ -268,14 +241,14 @@
 							"name": "Sort1"
 						}
 					],
-					"script": "source(output(\n\t\tid as integer,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> shops\nsource(output(\n\t\tid as integer,\n\t\tname as string,\n\t\tcategory_id as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> products\nsource(output(\n\t\tshop_id as integer,\n\t\tproduct_id as integer,\n\t\tbalance as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> productBalances\nshops, products join(1 == 1,\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> Join1\nJoin1, productBalances join(shops@id == shop_id\n\t&& products@id == product_id,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join2\nJoin2 select(mapColumn(\n\t\tshop_name = shops@name,\n\t\tproduct_name = products@name,\n\t\tbalance\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sort(asc(shop_name, true),\n\tasc(product_name, true),\n\tcaseInsensitive: true) ~> Sort1\nSort1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+					"script": "source(output(\n\t\tid as integer,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> shops\nsource(output(\n\t\tid as integer,\n\t\tname as string,\n\t\tcategory_id as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> products\nsource(output(\n\t\tshop_id as integer,\n\t\tproduct_id as integer,\n\t\tbalance as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> productBalances\nshops, products join(1 == 1,\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> Join1\nJoin1, productBalances join(shops@id == shop_id\n\t&& products@id == product_id,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join2\nJoin2 select(mapColumn(\n\t\tshop_name = shops@name,\n\t\tproduct_name = products@name,\n\t\tbalance\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 sort(asc(shop_name, true),\n\tasc(product_name, true),\n\tcaseInsensitive: true) ~> Sort1\nSort1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'delimited',\n\tcontainer: 'store',\n\tcolumnDelimiter: ',',\n\tescapeChar: '\\\\',\n\tqutoChar: '\\\"',\n\tcolumnNamesAsHeader: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/shops')]",
 				"[concat(variables('factoryId'), '/datasets/products')]",
 				"[concat(variables('factoryId'), '/datasets/product_balances')]",
-				"[concat(variables('factoryId'), '/datasets/named_product_balances')]"
+				"[concat(variables('factoryId'), '/linkedServices/csvs')]"
 			]
 		},
 		{

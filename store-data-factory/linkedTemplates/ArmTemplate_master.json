@@ -7,13 +7,13 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "store-data-factory"
 		},
-		"store_sql_database_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'store_sql_database'"
-		},
 		"csvs_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'csvs'"
+		},
+		"store_sql_database_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'store_sql_database'"
 		},
 		"containerUri": {
 			"type": "string",
@@ -42,11 +42,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"store_sql_database_connectionString": {
-						"value": "[parameters('store_sql_database_connectionString')]"
-					},
 					"csvs_connectionString": {
 						"value": "[parameters('csvs_connectionString')]"
+					},
+					"store_sql_database_connectionString": {
+						"value": "[parameters('store_sql_database_connectionString')]"
 					}
 				}
 			},
