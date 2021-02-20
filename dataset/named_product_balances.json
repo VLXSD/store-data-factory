@@ -10,6 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"fileName": "product_basances",
 				"container": "store"
 			},
 			"columnDelimiter": ",",
