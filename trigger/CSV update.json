@@ -1,0 +1,24 @@
+{
+	"name": "CSV update",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "sql_to_csv",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 12,
+				"startTime": "2021-02-21T00:00:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
